@@ -1,34 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-python-deployment
+  name: deploy1
+  labels:
+    app: app-v1
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
-      app: python-app
+      app: app-v1
   template:
     metadata:
       labels:
-        app: python-app
+        app: app-v1
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
       containers:
-      - name: my-python-app
-        image: akdevopscoaching/mypython-app
-        imagePullPolicy: Always
+      - name: deploy-images
+        image: kellyamadin/new-demo-docker-container-app-use:v1
         ports:
-        - containerPort: 5000
-# service type loadbalancer       
+        - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: python-app-svc
+  name: svc1
+  labels:
+    app: app-v1
 spec:
-  selector:
-    app: python-app
   ports:
-    - protocol: TCP
-      port: 5000
-      targetPort: 5000
-  type: LoadBalancer
+  - port: 8080
+    nodePort: 32000
+    protocol: TCP
+  selector:
+    app: app-v1
+  type: LoadBalancer 
